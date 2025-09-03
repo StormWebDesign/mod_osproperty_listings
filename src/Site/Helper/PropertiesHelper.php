@@ -1,9 +1,4 @@
 <?php
-/**
- * @package     Joomla.Site
- * @subpackage  mod_osproperty_listings
- */
-
 namespace Joomla\Module\OspropertyListings\Site\Helper;
 
 defined('_JEXEC') or die;
@@ -38,11 +33,11 @@ final class PropertiesHelper
         $cityCols  = self::getCols($db, $citiesTable);
         $mapCols   = self::getCols($db, $mapTable);
 
-        $titleCol    = self::firstExisting($propCols, ['pro_name', 'title', 'name']);
-        $priceCol    = self::firstExisting($propCols, ['price', 'pro_price', 'price_amount']);
-        $descCol     = self::firstExisting($propCols, ['pro_small_desc', 'pro_short_desc', 'short_description', 'description', 'introtext']);
-        $cityIdCol   = self::firstExisting($propCols, ['city_id', 'cid', 'cityid']);
-        $cityTextCol = self::firstExisting($propCols, ['city', 'town']);
+        $titleCol     = self::firstExisting($propCols, ['pro_name', 'title', 'name']);
+        $priceCol     = self::firstExisting($propCols, ['price', 'pro_price', 'price_amount']);
+        $descCol      = self::firstExisting($propCols, ['pro_small_desc', 'pro_short_desc', 'short_description', 'description', 'introtext']);
+        // Property-side city field may be ID or text depending on install
+        $propCityKey  = self::firstExisting($propCols, ['city_id', 'city', 'cid', 'cityid']);
 
         $publishedCol = self::firstExisting($propCols, ['published', 'state']);
         $approvedCol  = self::firstExisting($propCols, ['approved', 'is_approved']);
@@ -57,22 +52,26 @@ final class PropertiesHelper
             ])
             ->from($db->quoteName($propsTable, 'p'));
 
-        // City join or fallback
-        if ($cityIdCol && !empty($cityCols)) {
+        // --- City resolution (JOIN if possible, fallback otherwise) ---
+        if ($propCityKey) {
             $cityNameCol = self::firstExisting($cityCols, ['city', 'name', 'title']);
-            if ($cityNameCol) {
-                $q->select($db->quoteName("ci.$cityNameCol", 'city'))
-                  ->join('LEFT', $db->quoteName($citiesTable, 'ci') . ' ON ' . $db->quoteName('ci.id') . ' = ' . $db->quoteName("p.$cityIdCol"));
-            } elseif ($cityTextCol) {
-                $q->select($db->quoteName("p.$cityTextCol", 'city'));
+            if (!empty($cityCols) && $cityNameCol) {
+                // Try join via numeric ID, but fall back to the raw property field if it's already text
+                $coalesce = 'COALESCE(' . $db->quoteName("ci.$cityNameCol") . ', ' . $db->quoteName("p.$propCityKey") . ') AS ' . $db->quoteName('city');
+                $q->select($coalesce)
+                  ->join(
+                      'LEFT',
+                      $db->quoteName($citiesTable, 'ci') . ' ON ' . $db->quoteName('ci.id') . ' = ' . $db->quoteName("p.$propCityKey")
+                  );
             } else {
-                $q->select('"" AS city');
+                // No cities table/columns available; just output whatever is in the property field
+                $q->select($db->quoteName("p.$propCityKey", 'city'));
             }
-        } elseif ($cityTextCol) {
-            $q->select($db->quoteName("p.$cityTextCol", 'city'));
         } else {
+            // No city column found on properties; emit empty string to keep output consistent
             $q->select('"" AS city');
         }
+        // --- end City resolution ---
 
         // Category filter
         if ($categoriesIds && $mapCols) {
@@ -92,14 +91,10 @@ final class PropertiesHelper
 
         $db->setQuery($q, 0, $limit);
         $rows = (array) $db->loadObjectList();
+        if (!$rows) return [];
 
-        if (!$rows) {
-            return [];
-        }
-
-        // Build image URLs
+        // Images (as previously implemented)
         $imageBase = rtrim((string) $params->get('image_base', 'images/osproperty/properties/'), '/') . '/';
-
         foreach ($rows as $row) {
             $row->image = self::getPrimaryImage((int) $row->id, $db, $photosTable, $imageBase, $photoCols);
             if (isset($row->description)) {
@@ -110,21 +105,13 @@ final class PropertiesHelper
         return $rows;
     }
 
-    /**
-     * Resolve the display image (prefers /medium/, then /thumb/, then original).
-     * DB often stores just the filename in #__osrs_photos.image for each pro_id.
-     */
     private static function getPrimaryImage(int $propertyId, DatabaseInterface $db, string $photosTable, string $base, array $photoCols): ?string
     {
-        if (!$photoCols) {
-            return null;
-        }
+        if (!$photoCols) return null;
 
         $fk     = self::firstExisting($photoCols, ['pro_id', 'property_id', 'pid', 'p_id']);
         $fileCol= self::firstExisting($photoCols, ['image', 'photo', 'filename', 'file']);
-        if (!$fk || !$fileCol) {
-            return null;
-        }
+        if (!$fk || !$fileCol) return null;
 
         $hasDefault  = \in_array('is_default', $photoCols, true);
         $hasOrdering = \in_array('ordering', $photoCols, true);
@@ -142,22 +129,14 @@ final class PropertiesHelper
         $q->order(implode(', ', $ordering));
         $db->setQuery($q, 0, 1);
         $file = (string) $db->loadResult();
+        if ($file === '') return null;
 
-        if ($file === '') {
-            return null;
-        }
-
-        // If DB already stores a path, try that first (absolute or relative)
         if (str_contains($file, '/')) {
             $candidate = $file;
-            if (self::fileExists($candidate)) {
-                return self::toWebPath($candidate);
-            }
-            // If the path in DB is stale, fall back to property-folder layout below.
+            if (self::fileExists($candidate)) return self::toWebPath($candidate);
             $file = basename($file);
         }
 
-        // Normal layout: {base}/{pid}/[medium|thumb]/filename (then original)
         $dir = rtrim($base, '/') . '/' . $propertyId . '/';
         $candidates = [
             $dir . 'medium/' . $file,
@@ -166,47 +145,25 @@ final class PropertiesHelper
         ];
 
         foreach ($candidates as $c) {
-            if (self::fileExists($c)) {
-                return self::toWebPath($c);
-            }
+            if (self::fileExists($c)) return self::toWebPath($c);
         }
-
-        // Nothing found—return best guess so broken images are visible for diagnosis
         return self::toWebPath($candidates[0]);
     }
 
-    /** Check existence on filesystem using JPATH_ROOT */
     private static function fileExists(string $webRelativeOrAbsolute): bool
     {
-        $path = $webRelativeOrAbsolute;
-
-        // If absolute URL, we can't file_exists; treat as relative guess
-        if (preg_match('#^https?://#i', $path)) {
-            return true; // assume valid if remote URL provided
-        }
-
-        // Make relative to JPATH_ROOT
-        if ($path[0] === '/') {
-            $fs = JPATH_ROOT . $path;
-        } else {
-            $fs = JPATH_ROOT . '/' . $path;
-        }
+        if (preg_match('#^https?://#i', $webRelativeOrAbsolute)) return true;
+        $fs = ($webRelativeOrAbsolute[0] === '/')
+            ? JPATH_ROOT . $webRelativeOrAbsolute
+            : JPATH_ROOT . '/' . $webRelativeOrAbsolute;
         return is_file($fs);
     }
 
-    /** Convert a filesystem-ish path to a web path (respecting site root) */
     private static function toWebPath(string $path): string
     {
-        // If already absolute URL, pass through
-        if (preg_match('#^https?://#i', $path)) {
-            return $path;
-        }
-
+        if (preg_match('#^https?://#i', $path)) return $path;
         $root = rtrim(Uri::root(), '/');
-        if ($path[0] === '/') {
-            return $root . $path;
-        }
-        return $root . '/' . $path;
+        return ($path[0] === '/') ? $root . $path : $root . '/' . $path;
     }
 
     private static function getCols(DatabaseInterface $db, string $table): array
