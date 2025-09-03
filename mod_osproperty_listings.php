@@ -6,18 +6,11 @@
 
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\Module\OspropertyListings\Site\Helper\PropertiesHelper;
 
-// Load CSS (installed into /media/mod_osproperty_listings/css/style.css)
-$wa = Factory::getApplication()->getDocument()->getWebAssetManager();
-$wa->registerAndUseStyle(
-    'mod_osproperty_listings.styles',
-    'media/mod_osproperty_listings/css/style.css',
-    [],
-    ['defer' => false]
-);
+// No custom CSS enqueued (UIkit already on site)
 
 $items = PropertiesHelper::getItems($params);
 

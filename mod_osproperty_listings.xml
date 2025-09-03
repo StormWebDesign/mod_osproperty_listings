@@ -1,83 +1,76 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="module" client="site" method="upgrade" version="5.0">
-	<name>mod_osproperty_listings</name>
-	<version>1.0.0</version>
-	<creationDate>2025-09-03</creationDate>
-	<author>Storm Web (Russell)</author>
-	<authorEmail>info@stormwebdesign.co.uk</authorEmail>
-	<authorUrl>https://www.stormwebdesign.co.uk</authorUrl>
-	<license>GPL-2.0-or-later</license>
-	<description>Displays OS Property listings in a responsive grid.</description>
+  <name>mod_osproperty_listings</name>
+  <version>1.0.1</version>
+  <creationDate>2025-09-03</creationDate>
+  <author>Storm Web (Russell)</author>
+  <authorEmail>info@stormwebdesign.co.uk</authorEmail>
+  <authorUrl>https://www.stormwebdesign.co.uk</authorUrl>
+  <license>GPL-2.0-or-later</license>
+  <description>Displays OS Property listings in a UIkit grid.</description>
 
-	<!-- PSR-4 autoload for /src -->
-	<namespace>Joomla\Module\OspropertyListings</namespace>
+  <!-- PSR-4 autoload for /src -->
+  <namespace path="src">Joomla\Module\OspropertyListings</namespace>
 
-	<files>
-		<filename module="mod_osproperty_listings">mod_osproperty_listings.php</filename>
-		<filename>index.html</filename>
-		<folder>src</folder>
-		<folder>tmpl</folder>
-		<folder>language</folder>
-	</files>
+  <files>
+    <filename module="mod_osproperty_listings">mod_osproperty_listings.php</filename>
+    <filename>index.html</filename>
+    <folder>src</folder>
+    <folder>tmpl</folder>
+    <folder>language</folder>
+  </files>
 
-	<!-- Install CSS into /media/mod_osproperty_listings/... -->
-	<media folder="media" destination="mod_osproperty_listings">
-		<filename>css/style.css</filename>
-		<filename>index.html</filename>
-	</media>
+  <languages>
+    <language tag="en-GB">language/en-GB/en-GB.mod_osproperty_listings.ini</language>
+    <language tag="en-GB">language/en-GB/index.html</language>
+  </languages>
 
-	<languages>
-		<language tag="en-GB">language/en-GB/en-GB.mod_osproperty_listings.ini</language>
-		<language tag="en-GB">language/en-GB/index.html</language>
-	</languages>
+  <config>
+    <fields name="params">
+      <fieldset name="basic" label="MOD_OSPROPERTY_LISTINGS_FIELDSET_BASIC">
+        <!-- Multi-select categories by *name* -->
+        <field
+          name="categories"
+          type="sql"
+          label="MOD_OSPROPERTY_LISTINGS_CATEGORIES"
+          description="MOD_OSPROPERTY_LISTINGS_CATEGORIES_DESC"
+          multiple="true"
+          query="SELECT id AS value, category_name AS text FROM #__osrs_categories ORDER BY category_name"
+        />
 
-	<config>
-		<fields name="params">
-			<fieldset name="basic" label="MOD_OSPROPERTY_LISTINGS_FIELDSET_BASIC">
-				<!-- Multiple category picker (assumes #__osrs_categories with category_name) -->
-				<field
-					name="categories"
-					type="sql"
-					label="MOD_OSPROPERTY_LISTINGS_CATEGORIES"
-					description="MOD_OSPROPERTY_LISTINGS_CATEGORIES_DESC"
-					multiple="true"
-					required="false"
-					query="SELECT id AS value, category_name AS text FROM #__osrs_categories ORDER BY category_name"
-				/>
+        <!-- Grid columns -->
+        <field
+          name="columns"
+          type="list"
+          default="3"
+          label="MOD_OSPROPERTY_LISTINGS_COLUMNS"
+          description="MOD_OSPROPERTY_LISTINGS_COLUMNS_DESC">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </field>
 
-				<!-- Grid columns -->
-				<field
-					name="columns"
-					type="list"
-					default="3"
-					label="MOD_OSPROPERTY_LISTINGS_COLUMNS"
-					description="MOD_OSPROPERTY_LISTINGS_COLUMNS_DESC">
-					<option value="1">1</option>
-					<option value="2">2</option>
-					<option value="3">3</option>
-					<option value="4">4</option>
-				</field>
+        <!-- Max items -->
+        <field
+          name="count"
+          type="number"
+          default="6"
+          label="MOD_OSPROPERTY_LISTINGS_COUNT"
+          description="MOD_OSPROPERTY_LISTINGS_COUNT_DESC"
+          min="1"
+          max="48"
+        />
 
-				<!-- Max items -->
-				<field
-					name="count"
-					type="number"
-					default="6"
-					label="MOD_OSPROPERTY_LISTINGS_COUNT"
-					description="MOD_OSPROPERTY_LISTINGS_COUNT_DESC"
-					min="1"
-					max="48"
-				/>
-
-				<!-- Optional: image base path in case your OSProperty install differs -->
-				<field
-					name="image_base"
-					type="text"
-					default="images/osproperty/properties/"
-					label="MOD_OSPROPERTY_LISTINGS_IMAGE_BASE"
-					description="MOD_OSPROPERTY_LISTINGS_IMAGE_BASE_DESC"
-				/>
-			</fieldset>
-		</fields>
-	</config>
+        <!-- Optional: image base path -->
+        <field
+          name="image_base"
+          type="text"
+          default="images/osproperty/properties/"
+          label="MOD_OSPROPERTY_LISTINGS_IMAGE_BASE"
+          description="MOD_OSPROPERTY_LISTINGS_IMAGE_BASE_DESC"
+        />
+      </fieldset>
+    </fields>
+  </config>
 </extension>
