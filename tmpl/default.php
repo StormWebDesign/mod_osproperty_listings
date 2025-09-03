@@ -14,11 +14,7 @@ use Joomla\CMS\Language\Text;
 $cols = max(1, (int) $params->get('columns', 3));
 
 /**
- * Map our "columns" param to UIkit child-width classes for M (>=960px) and XL
- * 1 => jl-child-width-1-1
- * 2 => jl-child-width-1-2@m
- * 3 => jl-child-width-1-3@m
- * 4 => jl-child-width-1-4@m
+ * Map "columns" to your jl- child-width classes
  */
 $childWidth = match ($cols) {
     1 => 'jl-child-width-1-1',
@@ -39,9 +35,11 @@ endif;
       <article class="jl-card jl-card-default jl-card-small jl-overflow-hidden">
         <?php if (!empty($item->image)) : ?>
           <div class="jl-cover-container">
-            <img src="<?php echo htmlspecialchars($item->image, ENT_QUOTES, 'UTF-8'); ?>"
-                 alt="<?php echo htmlspecialchars($item->title ?? '', ENT_QUOTES, 'UTF-8'); ?>"
-                 jl-cover>
+            <img
+              src="<?php echo htmlspecialchars($item->image, ENT_QUOTES, 'UTF-8'); ?>"
+              alt="<?php echo htmlspecialchars($item->title ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+              jl-cover
+            >
             <canvas width="800" height="600"></canvas>
           </div>
         <?php endif; ?>
