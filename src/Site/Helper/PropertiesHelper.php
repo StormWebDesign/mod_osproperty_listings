@@ -1,4 +1,5 @@
 <?php
+
 namespace Joomla\Module\OspropertyListings\Site\Helper;
 
 defined('_JEXEC') or die;
@@ -32,7 +33,6 @@ final class PropertiesHelper
         $photoCols = self::getCols($db, $photosTable);
         $cityCols  = self::getCols($db, $citiesTable);
         $mapCols   = self::getCols($db, $mapTable);
-
         $titleCol     = self::firstExisting($propCols, ['pro_name', 'title', 'name']);
         $priceCol     = self::firstExisting($propCols, ['price', 'pro_price', 'price_amount']);
         $descCol      = self::firstExisting($propCols, ['pro_small_desc', 'pro_short_desc', 'short_description', 'description', 'introtext']);
@@ -43,6 +43,8 @@ final class PropertiesHelper
         $approvedCol  = self::firstExisting($propCols, ['approved', 'is_approved']);
         $soldCol      = self::firstExisting($propCols, ['is_sold', 'sold']);
 
+        $currCol   = self::firstExisting($propCols, ['curr', 'currency_id', 'currency']);
+
         $q = $db->getQuery(true)
             ->select([
                 $db->quoteName('p.id', 'id'),
@@ -52,6 +54,8 @@ final class PropertiesHelper
             ])
             ->from($db->quoteName($propsTable, 'p'));
 
+        $q->select($currCol ? $db->quoteName("p.$currCol", 'currency_id') : 'NULL AS currency_id');
+
         // --- City resolution (JOIN if possible, fallback otherwise) ---
         if ($propCityKey) {
             $cityNameCol = self::firstExisting($cityCols, ['city', 'name', 'title']);
@@ -59,10 +63,10 @@ final class PropertiesHelper
                 // Try join via numeric ID, but fall back to the raw property field if it's already text
                 $coalesce = 'COALESCE(' . $db->quoteName("ci.$cityNameCol") . ', ' . $db->quoteName("p.$propCityKey") . ') AS ' . $db->quoteName('city');
                 $q->select($coalesce)
-                  ->join(
-                      'LEFT',
-                      $db->quoteName($citiesTable, 'ci') . ' ON ' . $db->quoteName('ci.id') . ' = ' . $db->quoteName("p.$propCityKey")
-                  );
+                    ->join(
+                        'LEFT',
+                        $db->quoteName($citiesTable, 'ci') . ' ON ' . $db->quoteName('ci.id') . ' = ' . $db->quoteName("p.$propCityKey")
+                    );
             } else {
                 // No cities table/columns available; just output whatever is in the property field
                 $q->select($db->quoteName("p.$propCityKey", 'city'));
@@ -79,13 +83,19 @@ final class PropertiesHelper
             $fkCat  = self::firstExisting($mapCols, ['category_id', 'cat_id', 'cid']);
             if ($fkProp && $fkCat) {
                 $q->join('INNER', $db->quoteName($mapTable, 'pc') . ' ON ' . $db->quoteName('pc.' . $fkProp) . ' = ' . $db->quoteName('p.id'))
-                  ->where($db->quoteName('pc.' . $fkCat) . ' IN (' . implode(',', array_map([$db, 'quote'], $categoriesIds)) . ')');
+                    ->where($db->quoteName('pc.' . $fkCat) . ' IN (' . implode(',', array_map([$db, 'quote'], $categoriesIds)) . ')');
             }
         }
 
-        if ($publishedCol) { $q->where($db->quoteName("p.$publishedCol") . ' = 1'); }
-        if ($approvedCol)  { $q->where($db->quoteName("p.$approvedCol")  . ' = 1'); }
-        if ($soldCol)      { $q->where('(' . $db->quoteName("p.$soldCol") . ' = 0 OR ' . $db->quoteName("p.$soldCol") . ' IS NULL)'); }
+        if ($publishedCol) {
+            $q->where($db->quoteName("p.$publishedCol") . ' = 1');
+        }
+        if ($approvedCol) {
+            $q->where($db->quoteName("p.$approvedCol")  . ' = 1');
+        }
+        if ($soldCol) {
+            $q->where('(' . $db->quoteName("p.$soldCol") . ' = 0 OR ' . $db->quoteName("p.$soldCol") . ' IS NULL)');
+        }
 
         $q->order($db->quoteName('p.id') . ' DESC');
 
@@ -105,12 +115,31 @@ final class PropertiesHelper
         return $rows;
     }
 
+    private static function resolveCurrencyCode(DatabaseInterface $db, $currencyId): string
+    {
+        if (!$currencyId) {
+            return 'GBP';
+        }
+        try {
+            $q = $db->getQuery(true)
+                ->select($db->quoteName('currency_code'))
+                ->from($db->quoteName('#__osrs_currencies'))
+                ->where($db->quoteName('id') . ' = ' . (int) $currencyId);
+            $db->setQuery($q);
+            $code = $db->loadResult();
+            return $code ?: 'GBP';
+        } catch (\Throwable $e) {
+            return 'GBP';
+        }
+    }
+
+
     private static function getPrimaryImage(int $propertyId, DatabaseInterface $db, string $photosTable, string $base, array $photoCols): ?string
     {
         if (!$photoCols) return null;
 
         $fk     = self::firstExisting($photoCols, ['pro_id', 'property_id', 'pid', 'p_id']);
-        $fileCol= self::firstExisting($photoCols, ['image', 'photo', 'filename', 'file']);
+        $fileCol = self::firstExisting($photoCols, ['image', 'photo', 'filename', 'file']);
         if (!$fk || !$fileCol) return null;
 
         $hasDefault  = \in_array('is_default', $photoCols, true);
@@ -122,8 +151,12 @@ final class PropertiesHelper
             ->where($db->quoteName($fk) . ' = ' . (int) $propertyId);
 
         $ordering = [];
-        if ($hasDefault)  { $ordering[] = $db->quoteName('is_default') . ' DESC'; }
-        if ($hasOrdering) { $ordering[] = $db->quoteName('ordering') . ' ASC'; }
+        if ($hasDefault) {
+            $ordering[] = $db->quoteName('is_default') . ' DESC';
+        }
+        if ($hasOrdering) {
+            $ordering[] = $db->quoteName('ordering') . ' ASC';
+        }
         $ordering[] = $db->quoteName('id') . ' ASC';
 
         $q->order(implode(', ', $ordering));
