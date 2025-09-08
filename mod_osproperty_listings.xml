@@ -3,9 +3,9 @@
   <name>mod_osproperty_listings</name>
   <version>1.0.1</version>
   <creationDate>2025-09-03</creationDate>
-  <author>Storm Web (Russell)</author>
-  <authorEmail>info@stormwebdesign.co.uk</authorEmail>
-  <authorUrl>https://www.stormwebdesign.co.uk</authorUrl>
+  <author>Storm Web Design</author>
+  <authorEmail>info@storm.agency</authorEmail>
+  <authorUrl>https://www.stormit.co.uk</authorUrl>
   <license>GPL-2.0-or-later</license>
   <description>Displays OS Property listings in a UIkit grid.</description>
 
