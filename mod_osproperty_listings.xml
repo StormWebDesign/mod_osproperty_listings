@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="module" client="site" method="upgrade" version="5.0">
   <name>mod_osproperty_listings</name>
-  <version>1.0.8-dev</version>
+  <version>1.0.9-dev</version>
   <creationDate>2025-09-03</creationDate>
   <author>Storm Web Design</author>
   <authorEmail>info@storm.agency</authorEmail>

@@ -109,6 +109,24 @@ final class PropertiesHelper
         return $rows;
     }
 
+    private static function resolveCurrencyCode(DatabaseInterface $db, $currencyId): string
+    {
+        if (!$currencyId) {
+            return 'GBP';
+        }
+        try {
+            $q = $db->getQuery(true)
+                ->select($db->quoteName('currency_code'))
+                ->from($db->quoteName('#__osrs_currencies'))
+                ->where($db->quoteName('id') . ' = ' . (int) $currencyId);
+            $db->setQuery($q);
+            $code = $db->loadResult();
+            return $code ?: 'GBP';
+        } catch (\Throwable $e) {
+            return 'GBP';
+        }
+    }
+
     private static function getCols(DatabaseInterface $db, string $table): array
     {
         try {
