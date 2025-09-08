@@ -12,6 +12,8 @@ final class PropertiesHelper
 {
     public static function getItems(Registry $params): array
     {
+        Factory::getApplication()->enqueueMessage('DEBUG: PropertiesHelper reached');
+
         /** @var DatabaseInterface $db */
         $db = Factory::getContainer()->get(DatabaseInterface::class);
 
