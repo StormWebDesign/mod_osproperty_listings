@@ -36,7 +36,6 @@ final class PropertiesHelper
         $titleCol     = self::firstExisting($propCols, ['pro_name', 'title', 'name']);
         $priceCol     = self::firstExisting($propCols, ['price', 'pro_price', 'price_amount']);
         $descCol      = self::firstExisting($propCols, ['pro_small_desc', 'pro_short_desc', 'short_description', 'description', 'introtext']);
-        // Property-side city field may be ID or text depending on install
         $propCityKey  = self::firstExisting($propCols, ['city_id', 'city', 'cid', 'cityid']);
 
         $publishedCol = self::firstExisting($propCols, ['published', 'state']);
@@ -56,11 +55,10 @@ final class PropertiesHelper
 
         $q->select($currCol ? $db->quoteName("p.$currCol", 'currency_id') : 'NULL AS currency_id');
 
-        // --- City resolution (JOIN if possible, fallback otherwise) ---
+        // --- City resolution ---
         if ($propCityKey) {
             $cityNameCol = self::firstExisting($cityCols, ['city', 'name', 'title']);
             if (!empty($cityCols) && $cityNameCol) {
-                // Try join via numeric ID, but fall back to the raw property field if it's already text
                 $coalesce = 'COALESCE(' . $db->quoteName("ci.$cityNameCol") . ', ' . $db->quoteName("p.$propCityKey") . ') AS ' . $db->quoteName('city');
                 $q->select($coalesce)
                     ->join(
@@ -68,11 +66,9 @@ final class PropertiesHelper
                         $db->quoteName($citiesTable, 'ci') . ' ON ' . $db->quoteName('ci.id') . ' = ' . $db->quoteName("p.$propCityKey")
                     );
             } else {
-                // No cities table/columns available; just output whatever is in the property field
                 $q->select($db->quoteName("p.$propCityKey", 'city'));
             }
         } else {
-            // No city column found on properties; emit empty string to keep output consistent
             $q->select('"" AS city');
         }
         // --- end City resolution ---
@@ -103,10 +99,9 @@ final class PropertiesHelper
         $rows = (array) $db->loadObjectList();
         if (!$rows) return [];
 
-        // Images (as previously implemented)
-        $imageBase = rtrim((string) $params->get('image_base', 'images/osproperty/properties/'), '/') . '/';
+        // Images (only filename now)
         foreach ($rows as $row) {
-            $row->image = self::getPrimaryImage((int) $row->id, $db, $photosTable, $imageBase, $photoCols);
+            $row->image = self::getPrimaryImage((int) $row->id, $db, $photosTable, $photoCols);
             if (isset($row->description)) {
                 $row->description = trim(strip_tags((string) $row->description));
             }
@@ -133,34 +128,34 @@ final class PropertiesHelper
         }
     }
 
+    private static function getPrimaryImage(
+        int $propertyId,
+        DatabaseInterface $db,
+        string $photosTable,
+        array $photoCols
+    ): ?string {
+        if (!$photoCols) return null;
 
-    private static function getPrimaryImage(int $propertyId, DatabaseInterface $db, string $photosTable, string $base, array $photoCols): ?string
-{
-    if (!$photoCols) return null;
+        $fk      = self::firstExisting($photoCols, ['pro_id', 'property_id', 'pid', 'p_id']);
+        $fileCol = self::firstExisting($photoCols, ['image', 'photo', 'filename', 'file']);
+        if (!$fk || !$fileCol) return null;
 
-    $fk      = self::firstExisting($photoCols, ['pro_id', 'property_id', 'pid', 'p_id']);
-    $fileCol = self::firstExisting($photoCols, ['image', 'photo', 'filename', 'file']);
-    if (!$fk || !$fileCol) return null;
+        $q = $db->getQuery(true)
+            ->select($db->quoteName($fileCol, 'file'))
+            ->from($db->quoteName($photosTable))
+            ->where($db->quoteName($fk) . ' = ' . (int) $propertyId)
+            ->order($db->quoteName('is_default') . ' DESC, ' . $db->quoteName('ordering') . ' ASC, ' . $db->quoteName('id') . ' ASC');
 
-    $q = $db->getQuery(true)
-        ->select($db->quoteName($fileCol, 'file'))
-        ->from($db->quoteName($photosTable))
-        ->where($db->quoteName($fk) . ' = ' . (int) $propertyId)
-        ->order($db->quoteName('is_default') . ' DESC, ' . $db->quoteName('ordering') . ' ASC, ' . $db->quoteName('id') . ' ASC');
+        $db->setQuery($q, 0, 1);
+        $file = (string) $db->loadResult();
 
-    $db->setQuery($q, 0, 1);
-    $file = (string) $db->loadResult();
+        if ($file === '') {
+            return null;
+        }
 
-    if ($file === '') {
-        return null;
+        // Return just the filename
+        return basename($file);
     }
-
-    // Build the path: base/propertyId/medium/filename
-    $relativePath = rtrim($base, '/') . '/' . $propertyId . '/medium/' . $file;
-
-    return self::toWebPath($relativePath);
-}
-
 
     private static function fileExists(string $webRelativeOrAbsolute): bool
     {
