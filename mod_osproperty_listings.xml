@@ -1,15 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="module" client="site" method="upgrade" version="5.0">
   <name>mod_osproperty_listings</name>
-  <version>1.0.6-dev</version>
+  <version>1.0.7-dev</version>
   <creationDate>2025-09-03</creationDate>
   <author>Storm Web Design</author>
   <authorEmail>info@storm.agency</authorEmail>
   <authorUrl>https://www.stormit.co.uk</authorUrl>
   <license>GPL-2.0-or-later</license>
   <description>Displays OS Property listings in a UIkit grid.</description>
-
-  <namespace path="src">Joomla\Module\OspropertyListings</namespace>
 
   <files>
     <filename module="mod_osproperty_listings">mod_osproperty_listings.php</filename>
