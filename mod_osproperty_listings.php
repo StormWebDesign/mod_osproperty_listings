@@ -6,6 +6,13 @@
 
 defined('_JEXEC') or die;
 
+spl_autoload_register(function ($class) {
+    if ($class === 'Joomla\\Module\\OspropertyListings\\Helper\\PropertiesHelper') {
+        require __DIR__ . '/src/Helper/PropertiesHelper.php';
+    }
+});
+
+
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\Module\OspropertyListings\Helper\PropertiesHelper;
