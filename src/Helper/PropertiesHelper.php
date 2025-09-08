@@ -5,7 +5,6 @@ namespace Joomla\Module\OspropertyListings\Helper;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
-use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Registry\Registry;
 
@@ -25,12 +24,10 @@ final class PropertiesHelper
 
         $propsTable  = '#__osrs_properties';
         $citiesTable = '#__osrs_cities';
-        $photosTable = '#__osrs_photos';
         $mapTable    = '#__osrs_property_categories';
 
         // Column detection
         $propCols  = self::getCols($db, $propsTable);
-        $photoCols = self::getCols($db, $photosTable);
         $cityCols  = self::getCols($db, $citiesTable);
         $mapCols   = self::getCols($db, $mapTable);
         $titleCol     = self::firstExisting($propCols, ['pro_name', 'title', 'name']);
@@ -99,78 +96,15 @@ final class PropertiesHelper
         $rows = (array) $db->loadObjectList();
         if (!$rows) return [];
 
-        // Images (only filename now)
+        // Simplified: no image handling
         foreach ($rows as $row) {
-            $row->image = self::getPrimaryImage((int) $row->id, $db, $photosTable, $photoCols);
+            $row->image = null;
             if (isset($row->description)) {
                 $row->description = trim(strip_tags((string) $row->description));
             }
         }
 
         return $rows;
-    }
-
-    private static function resolveCurrencyCode(DatabaseInterface $db, $currencyId): string
-    {
-        if (!$currencyId) {
-            return 'GBP';
-        }
-        try {
-            $q = $db->getQuery(true)
-                ->select($db->quoteName('currency_code'))
-                ->from($db->quoteName('#__osrs_currencies'))
-                ->where($db->quoteName('id') . ' = ' . (int) $currencyId);
-            $db->setQuery($q);
-            $code = $db->loadResult();
-            return $code ?: 'GBP';
-        } catch (\Throwable $e) {
-            return 'GBP';
-        }
-    }
-
-    private static function getPrimaryImage(
-        int $propertyId,
-        DatabaseInterface $db,
-        string $photosTable,
-        array $photoCols
-    ): ?string {
-        if (!$photoCols) return null;
-
-        $fk      = self::firstExisting($photoCols, ['pro_id', 'property_id', 'pid', 'p_id']);
-        $fileCol = self::firstExisting($photoCols, ['image', 'photo', 'filename', 'file']);
-        if (!$fk || !$fileCol) return null;
-
-        $q = $db->getQuery(true)
-            ->select($db->quoteName($fileCol, 'file'))
-            ->from($db->quoteName($photosTable))
-            ->where($db->quoteName($fk) . ' = ' . (int) $propertyId)
-            ->order($db->quoteName('is_default') . ' DESC, ' . $db->quoteName('ordering') . ' ASC, ' . $db->quoteName('id') . ' ASC');
-
-        $db->setQuery($q, 0, 1);
-        $file = (string) $db->loadResult();
-
-        if ($file === '') {
-            return null;
-        }
-
-        // Return just the filename
-        return basename($file);
-    }
-
-    private static function fileExists(string $webRelativeOrAbsolute): bool
-    {
-        if (preg_match('#^https?://#i', $webRelativeOrAbsolute)) return true;
-        $fs = ($webRelativeOrAbsolute[0] === '/')
-            ? JPATH_ROOT . $webRelativeOrAbsolute
-            : JPATH_ROOT . '/' . $webRelativeOrAbsolute;
-        return is_file($fs);
-    }
-
-    private static function toWebPath(string $path): string
-    {
-        if (preg_match('#^https?://#i', $path)) return $path;
-        $root = rtrim(Uri::root(), '/');
-        return ($path[0] === '/') ? $root . $path : $root . '/' . $path;
     }
 
     private static function getCols(DatabaseInterface $db, string $table): array

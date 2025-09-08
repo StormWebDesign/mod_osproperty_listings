@@ -1,16 +1,10 @@
 <?php
-/**
- * @package     Joomla.Site
- * @subpackage  mod_osproperty_listings
- */
-
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ModuleHelper;
-use Joomla\Module\OspropertyListings\Helper\PropertiesHelper;
 
-// No custom CSS enqueued (UIkit already on site)
+use Joomla\Module\OspropertyListings\Helper\PropertiesHelper;
 
 $items = PropertiesHelper::getItems($params);
 
