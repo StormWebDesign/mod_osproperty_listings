@@ -135,53 +135,32 @@ final class PropertiesHelper
 
 
     private static function getPrimaryImage(int $propertyId, DatabaseInterface $db, string $photosTable, string $base, array $photoCols): ?string
-    {
-        if (!$photoCols) return null;
+{
+    if (!$photoCols) return null;
 
-        $fk     = self::firstExisting($photoCols, ['pro_id', 'property_id', 'pid', 'p_id']);
-        $fileCol = self::firstExisting($photoCols, ['image', 'photo', 'filename', 'file']);
-        if (!$fk || !$fileCol) return null;
+    $fk      = self::firstExisting($photoCols, ['pro_id', 'property_id', 'pid', 'p_id']);
+    $fileCol = self::firstExisting($photoCols, ['image', 'photo', 'filename', 'file']);
+    if (!$fk || !$fileCol) return null;
 
-        $hasDefault  = \in_array('is_default', $photoCols, true);
-        $hasOrdering = \in_array('ordering', $photoCols, true);
+    $q = $db->getQuery(true)
+        ->select($db->quoteName($fileCol, 'file'))
+        ->from($db->quoteName($photosTable))
+        ->where($db->quoteName($fk) . ' = ' . (int) $propertyId)
+        ->order($db->quoteName('is_default') . ' DESC, ' . $db->quoteName('ordering') . ' ASC, ' . $db->quoteName('id') . ' ASC');
 
-        $q = $db->getQuery(true)
-            ->select($db->quoteName($fileCol, 'file'))
-            ->from($db->quoteName($photosTable))
-            ->where($db->quoteName($fk) . ' = ' . (int) $propertyId);
+    $db->setQuery($q, 0, 1);
+    $file = (string) $db->loadResult();
 
-        $ordering = [];
-        if ($hasDefault) {
-            $ordering[] = $db->quoteName('is_default') . ' DESC';
-        }
-        if ($hasOrdering) {
-            $ordering[] = $db->quoteName('ordering') . ' ASC';
-        }
-        $ordering[] = $db->quoteName('id') . ' ASC';
-
-        $q->order(implode(', ', $ordering));
-        $db->setQuery($q, 0, 1);
-        $file = (string) $db->loadResult();
-        if ($file === '') return null;
-
-        if (str_contains($file, '/')) {
-            $candidate = $file;
-            if (self::fileExists($candidate)) return self::toWebPath($candidate);
-            $file = basename($file);
-        }
-
-        $dir = rtrim($base, '/') . '/' . $propertyId . '/';
-        $candidates = [
-            $dir . 'medium/' . $file,
-            $dir . 'thumb/'  . $file,
-            $dir . $file,
-        ];
-
-        foreach ($candidates as $c) {
-            if (self::fileExists($c)) return self::toWebPath($c);
-        }
-        return self::toWebPath($candidates[0]);
+    if ($file === '') {
+        return null;
     }
+
+    // Build the path: base/propertyId/medium/filename
+    $relativePath = rtrim($base, '/') . '/' . $propertyId . '/medium/' . $file;
+
+    return self::toWebPath($relativePath);
+}
+
 
     private static function fileExists(string $webRelativeOrAbsolute): bool
     {
