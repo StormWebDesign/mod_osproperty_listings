@@ -8,7 +8,7 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ModuleHelper;
-use Joomla\Module\OspropertyListings\Site\Helper\PropertiesHelper;
+use Joomla\Module\OspropertyListings\Helper\PropertiesHelper;
 
 // No custom CSS enqueued (UIkit already on site)
 

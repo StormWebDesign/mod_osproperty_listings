@@ -1,6 +1,6 @@
 <?php
 
-namespace Joomla\Module\OspropertyListings\Site\Helper;
+namespace Joomla\Module\OspropertyListings\Helper;
 
 defined('_JEXEC') or die;
 
