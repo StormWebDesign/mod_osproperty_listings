@@ -4,6 +4,8 @@ defined('_JEXEC') or die;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Uri\Uri;
+use Joomla\Module\OspropertyListings\Helper\PropertiesHelper;
+use Joomla\Database\DatabaseInterface;
 
 /** @var array $items */
 /** @var Joomla\Registry\Registry $params */
@@ -52,8 +54,8 @@ endif;
               $fmt = new \NumberFormatter('en_GB', \NumberFormatter::CURRENCY);
               $currencyCode = 'GBP';
               if (!empty($item->currency_id)) {
-                $currencyCode = \Joomla\Module\OspropertyListings\Site\Helper\PropertiesHelper::resolveCurrencyCode(
-                  \Joomla\CMS\Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class),
+                $currencyCode = PropertiesHelper::resolveCurrencyCode(
+                  Factory::getContainer()->get(DatabaseInterface::class),
                   $item->currency_id
                 );
               }
