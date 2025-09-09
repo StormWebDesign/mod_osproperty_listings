@@ -6,6 +6,8 @@
 
 defined('_JEXEC') or die;
 
+ini_set('memory_limit', '256M');
+
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Factory;
 

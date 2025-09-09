@@ -35,7 +35,7 @@ class ModOspropertyListingsHelper
 
         $query->setLimit($limit);
 
-        $db->setQuery($query);
+        $db->setQuery($query, 0, $limit);
         $properties = $db->loadObjectList();
 
         if (!$properties) {
