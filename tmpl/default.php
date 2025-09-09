@@ -10,7 +10,7 @@ use Joomla\CMS\Router\Route;
 // Get column count from params
 $columns = (int) $params->get('columns', 3);
 
-$image_location = 'images/osproperty/properties/';
+$image_location = 'images/osproperty/properties'; // Base image location
 
 ?>
 
@@ -20,7 +20,7 @@ $image_location = 'images/osproperty/properties/';
             <div class="uk-card uk-card-default uk-card-hover uk-card-small">
                 <?php if ($item->image): ?>
                     <div class="uk-card-media-top">
-                        <img src="<?php echo htmlspecialchars($item->image, ENT_QUOTES, 'UTF-8'); ?>"
+                        <img src="<?php echo $image_location . $p_id . '/medium/' . $item->image; ?>"
                              alt="<?php echo htmlspecialchars($item->pro_name, ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                 <?php endif; ?>
