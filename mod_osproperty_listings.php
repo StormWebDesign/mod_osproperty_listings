@@ -1,14 +1,16 @@
 <?php
+/**
+ * @package     Joomla.Site
+ * @subpackage  mod_osproperty_listings
+ */
+
 defined('_JEXEC') or die;
 
-use Joomla\CMS\Factory;
 use Joomla\CMS\Helper\ModuleHelper;
+use Joomla\CMS\Factory;
 
-// Manually require the helper to avoid PSR-4 mapping issues
-require_once __DIR__ . '/src/Helper/PropertiesHelper.php';
+require_once __DIR__ . '/helper.php';
 
-use Joomla\Module\OspropertyListings\Helper\PropertiesHelper;
-
-$items = PropertiesHelper::getItems($params);
+$items = ModOspropertyListingsHelper::getItems($params);
 
 require ModuleHelper::getLayoutPath('mod_osproperty_listings', $params->get('layout', 'default'));
