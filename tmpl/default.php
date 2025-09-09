@@ -39,6 +39,10 @@ $columns = (int) $params->get('columns', 3);
                 <div class="uk-card-footer">
                     <a href="<?php echo Route::_($item->link); ?>" class="uk-button uk-button-text">Read More</a>
                 </div>
+
+                <p><small>Property ID: <?php echo (int) $item->id; ?></small></p>
+
+
             </div>
         </div>
     <?php endforeach; ?>
