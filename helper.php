@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Helper for OS Property Listings Module
  */
@@ -29,9 +30,10 @@ class ModOspropertyListingsHelper
             ->where('p.approved = 1 AND p.published = 1');
 
         if ($categoriesIds) {
-            $query->join('INNER', '#__osrs_property_categories AS pc ON pc.pro_id = p.id')
+            $query->join('INNER', '#__osrs_property_categories AS pc ON pc.pid = p.id')
                 ->where('pc.category_id IN (' . implode(',', $categoriesIds) . ')');
         }
+
 
         $query->setLimit($limit);
 
