@@ -26,7 +26,9 @@ $image_location = 'images/osproperty/properties/'; // Base image location
                 <?php endif; ?>
                 <div class="jl-card-body">
                     <h3 class="jl-card-title">
+                      <a href="<?php echo Route::_($item->link); ?>">
                         <?php echo htmlspecialchars($item->pro_name, ENT_QUOTES, 'UTF-8'); ?>
+                      </a>
                     </h3>
                     <p>
                         <strong><?php echo $item->currency_symbol . number_format($item->price); ?></strong>
