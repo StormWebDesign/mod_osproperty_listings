@@ -10,7 +10,7 @@ use Joomla\CMS\Router\Route;
 // Get column count from params
 $columns = (int) $params->get('columns', 3);
 
-$image_location = 'images/osproperty/properties'; // Base image location
+$image_location = 'images/osproperty/properties/'; // Base image location
 
 ?>
 
@@ -42,7 +42,7 @@ $image_location = 'images/osproperty/properties'; // Base image location
                 <div class="uk-card-footer">
                     <a href="<?php echo Route::_($item->link); ?>" class="uk-button uk-button-text">Read More</a>
                 </div>
-<?php echo $image_location . $p_id . '/medium/' . $item->image; ?>
+<?php echo $image_location . $item->id . '/medium/' . $item->image; ?>
                 <p><small>Property ID: <?php echo (int) $item->id; ?></small></p>
 
 
