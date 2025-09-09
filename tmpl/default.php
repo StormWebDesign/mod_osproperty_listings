@@ -20,7 +20,7 @@ $image_location = 'images/osproperty/properties'; // Base image location
             <div class="uk-card uk-card-default uk-card-hover uk-card-small">
                 <?php if ($item->image): ?>
                     <div class="uk-card-media-top">
-                        <img src="<?php echo $image_location . $p_id . '/medium/' . $item->image; ?>"
+                        <img src="<?php echo $image_location . $item->id . '/medium/' . $item->image; ?>"
                              alt="<?php echo htmlspecialchars($item->pro_name, ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                 <?php endif; ?>
