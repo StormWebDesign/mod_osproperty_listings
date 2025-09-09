@@ -14,21 +14,39 @@
         <filename>helper.php</filename>
         <folder>tmpl</folder>
     </files>
-    <config>
+      <config>
         <fields name="params">
             <fieldset name="basic">
+                <!-- Number of properties -->
                 <field
                     name="count"
                     type="number"
                     default="6"
                     label="Number of properties"
                 />
+
+                <!-- Column count -->
+                <field
+                    name="columns"
+                    type="list"
+                    default="3"
+                    label="Columns"
+                    description="Select how many columns to display in the grid"
+                >
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </field>
+
+                <!-- Category selector using SQL -->
                 <field
                     name="categories"
-                    type="ospropertycategories"
+                    type="sql"
                     multiple="true"
                     label="Select Categories"
                     description="Choose categories of properties to display"
+                    query="SELECT id AS value, category_name AS text FROM #__osrs_categories WHERE published = 1 ORDER BY category_name ASC"
                 />
             </fieldset>
         </fields>

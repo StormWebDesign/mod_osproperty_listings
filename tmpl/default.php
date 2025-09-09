@@ -7,15 +7,18 @@ defined('_JEXEC') or die;
 
 use Joomla\CMS\Router\Route;
 
+// Get column count from params
+$columns = (int) $params->get('columns', 3);
 ?>
 
-<div class="uk-grid-small uk-child-width-1-3@s uk-grid-match" uk-grid>
+<div class="uk-grid-small uk-child-width-1-<?php echo $columns; ?>@s uk-grid-match" uk-grid>
     <?php foreach ($items as $item): ?>
         <div>
             <div class="uk-card uk-card-default uk-card-hover uk-card-small">
                 <?php if ($item->image): ?>
                     <div class="uk-card-media-top">
-                        <img src="<?php echo htmlspecialchars($item->image, ENT_QUOTES, 'UTF-8'); ?>" alt="<?php echo htmlspecialchars($item->pro_name, ENT_QUOTES, 'UTF-8'); ?>">
+                        <img src="<?php echo htmlspecialchars($item->image, ENT_QUOTES, 'UTF-8'); ?>"
+                             alt="<?php echo htmlspecialchars($item->pro_name, ENT_QUOTES, 'UTF-8'); ?>">
                     </div>
                 <?php endif; ?>
                 <div class="uk-card-body">
@@ -29,7 +32,8 @@ use Joomla\CMS\Router\Route;
                         <?php echo htmlspecialchars(mb_strimwidth($item->pro_small_desc, 0, 60, '...'), ENT_QUOTES, 'UTF-8'); ?>
                     </p>
                     <p>
-                        <span uk-icon="location"></span> <?php echo htmlspecialchars($item->city_name, ENT_QUOTES, 'UTF-8'); ?>
+                        <span uk-icon="location"></span>
+                        <?php echo htmlspecialchars($item->city_name, ENT_QUOTES, 'UTF-8'); ?>
                     </p>
                 </div>
                 <div class="uk-card-footer">
