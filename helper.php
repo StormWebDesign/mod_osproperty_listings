@@ -3,14 +3,12 @@
  * Helper for OS Property Listings Module
  */
 
-namespace Joomla\Module\OspropertyListings\Helper;
-
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseInterface;
 
-final class ModOspropertyListingsHelper
+class ModOspropertyListingsHelper
 {
     public static function getItems($params): array
     {
